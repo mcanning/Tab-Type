@@ -1,4 +1,4 @@
-Tab & Type — Firefox extension, version 1.0.1
+Tab & Type — Firefox extension, version 1.0.2
 
 Your page, ready to search.
 
@@ -90,4 +90,6 @@ in their normal Firefox window. Version 1.0.0 adds release branding, the MIT
 license, privacy documentation and a blank default website field.
 Version 1.0.1 replaces the typing-cursor icon with a browser tab and search
 symbol. Extension behavior is unchanged.
+Version 1.0.2 removes the custom favicon from the new-tab page, leaving the
+tab icon to Firefox. The settings page and add-on keep their branded icons.
 Mozilla signing / AMO review has not been performed.

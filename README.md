@@ -21,7 +21,7 @@ Your existing Firefox search engine handles anything you type in the address bar
 
 ## Install
 
-Requires **desktop Firefox 140 or later**. Version 1.0.1 has not yet been signed
+Requires **desktop Firefox 140 or later**. Version 1.0.2 has not yet been signed
 or published on Mozilla Add-ons. An unsigned ZIP cannot be installed permanently
 in ordinary Firefox.
 
@@ -67,7 +67,7 @@ node --test tests/*.test.cjs
 To package the committed extension source with Git:
 
 ```sh
-git archive --format=zip --output=tab-and-type-1.0.1.zip HEAD:extension
+git archive --format=zip --output=tab-and-type-1.0.2.zip HEAD:extension
 ```
 
 The resulting ZIP has `manifest.json` at its root. It is still unsigned.

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Tab & Type",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Show your chosen website on new tabs, keep the address bar ready, and open ordinary links in the full tab.",
   "browser_specific_settings": {
     "gecko": {
