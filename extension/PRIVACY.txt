@@ -11,8 +11,9 @@ handle links within that embedded page. It does not request access to your
 bookmarks, passwords, clipboard, or browsing history.
 
 To restore your place when you use Back or Forward, the extension temporarily
-keeps the most recent start-page URL, selected Glance groups and scroll positions
-for each browser tab in memory. It does not retain page HTML, form entries or
+keeps the most recent start-page URL, standard tab selections, open/closed
+section states, element identifiers/paths and scroll positions for each browser
+tab in memory. It does not retain page HTML, form entries or
 arbitrary website application state. These view snapshots are not sent anywhere
 or written to extension storage. They are cleared when the tab closes, the
 selected site changes, access is revoked, or the extension stops running.

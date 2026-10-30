@@ -1,4 +1,4 @@
-Tab & Type — Firefox extension, version 1.0.3
+Tab & Type — Firefox extension, version 1.0.4
 
 Your page, ready to search.
 
@@ -17,7 +17,8 @@ middle-click, downloads and in-page fragment links retain native behavior.
 Glance's active linked group headings are supported too.
 
 Back/Forward navigation reuses cached iframes or restores the most recent
-selected Glance groups and page/panel scroll positions for that browser tab.
+standard tab selections, expandable sections and page/panel scroll positions
+for that browser tab. Glance groups use the same standard ARIA tab handling.
 State is temporary, bounded background memory, cleared on tab closure, site
 change or revocation. It is not shared between tabs or stored on disk.
 Firefox may still reload the page; changed layouts, feed content and arbitrary
@@ -44,10 +45,12 @@ CONTENTS
 extension/ is the complete, dependency-free add-on source. There is no build
 step. The distribution ZIP contains only those files, with manifest.json at its
 root. tests/ executes the actual packaged scripts using Node's built-in test
-runner and mocked browser APIs / DOM events.
+runner, mocked browser APIs and jsdom HTML fixtures with simulated scrolling.
 
-Run from this folder with Node 22 or newer:
-    node --test tests/*.test.cjs
+Run from the repository root with Node 22.22.2+, 24.15.0+, or 26+ and pnpm 11.25.0:
+    pnpm install --frozen-lockfile --ignore-scripts
+    pnpm test
+jsdom is a development dependency only; nothing in node_modules is packaged.
 
 DESIGN / MOZILLA REVIEWER NOTES
 
@@ -80,18 +83,58 @@ Native form targets become _top while preserving method,
 encoding and body. JavaScript-only navigations and custom form routers are not
 guaranteed. Security headers and signature-check settings are never modified.
 
-All executable code is packaged, readable, original source; no bundler, remote
-code, dependencies, or compilation is involved. The add-on has no telemetry or
+All executable extension code is packaged, readable, original source; no bundler,
+remote code, runtime dependencies, or compilation is involved. The add-on has no telemetry or
 data collection. A user-selected website is loaded directly as ordinary web
 content, subject to that site's own behavior and privacy policy.
 
+GENERIC VIEW RESTORATION
+
+page-view.js uses semantic HTML/ARIA rather than dashboard-specific selectors:
+- Tabs need role=tab, aria-selected, a containing tablist and aria-controls
+  pointing to a tabpanel. Only the selected tab per list is saved.
+- Native details elements save both open and closed states.
+- Accordion/disclosure buttons need aria-expanded and aria-controls pointing
+  to a role=region whose aria-labelledby references the button's unique ID.
+
+Snapshots identify elements by unique ID when available, otherwise by a bounded
+child-element path and tag name. Missing/duplicate IDs do not fall back to old
+paths. Restoring verifies the control type and its list/panel relationships
+again. IDs can survive reordered DOM content; paths cannot reliably do so.
+No text labels, page HTML, field values, or arbitrary script data are captured.
+The serializer retains at most 128 controls and 128 scrolled elements per view,
+with bounded paths, IDs and coordinates. The background retains at most 200
+tab snapshots. Right-to-left horizontal offsets may be negative.
+
+Each changed tab/disclosure activates its site handler once per DOM element,
+so the site's internal state agrees with its visible selection. An already
+active control is never clicked. Native details are assigned only when needed.
+Closing sections are applied before opening them. Disabled, inert, editable,
+form-submit and popup controls are excluded. Links must be same-page anchors;
+their native navigation is canceled to avoid creating history entries. Site
+handlers requiring trusted or uncanceled anchor events may not restore.
+
+Restoration waits for DOMContentLoaded and retries missing controls or unsettled
+scroll positions for up to five seconds, stopping after five stable checks or
+immediately on trusted user input. Unresponsive controls are not clicked again;
+replacement DOM nodes may be retried. This cannot reconstruct arbitrary app
+state, custom controls, shadow-root content, or changed feed contents.
+Keyboard changes and details toggle events also schedule snapshots. Form values
+are excluded, and snapshots still require the authenticated frame and token.
+
+Markup reference: https://www.w3.org/WAI/ARIA/apg/patterns/tabs/
+Details reference: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/details
+
 VALIDATION STATUS
 
-All 31 Node tests pass using mocked Firefox APIs and DOM events, including
+All 46 Node tests pass using mocked Firefox APIs and jsdom HTML fixtures, including
 regressions for the dashboard's target rewriting and linked group headings.
-Back/Forward regressions cover cached and reloaded documents, group and nested
-scroll restoration, user interruption, late widget setup, tab isolation,
-revocation, snapshot validation and renewed bridge authorization. These new
+Back/Forward regressions cover cached and reloaded documents, standard and Glance
+tabs, nested tablists, native details, ARIA accordions, scrolling, moved/changed
+controls, unsafe action exclusion, user interruption, late inserted controls,
+tab isolation, revocation, snapshot validation and renewed bridge authorization.
+Timing and scrolling are simulated; jsdom does not reproduce Firefox layout,
+browser UI or its history cache. These new
 changes have not yet been tested in a live Firefox session.
 
 The link behavior was tested in real Firefox 159 with an isolated, headless
@@ -107,4 +150,6 @@ Version 1.0.2 removes the custom favicon from the new-tab page, leaving the
 tab icon to Firefox. The settings page and add-on keep their branded icons.
 Version 1.0.3 adds temporary view restoration after Back/Forward navigation
 and reconnects cached frames without resetting their document or click state.
-Mozilla signing / AMO review has not been performed.
+Version 1.0.4 replaces Glance-specific restoration with standard HTML/ARIA
+control handling, stable IDs, bounded activation and generic DOM regressions.
+Version 1.0.4 has not been submitted for Mozilla signing / AMO review.

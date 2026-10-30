@@ -16,13 +16,13 @@ Your existing Firefox search engine handles anything you type in the address bar
 - Open ordinary links in the full tab, including links initially marked to open a new window.
 - Keep normal Ctrl-click, middle-click, download, and in-page anchor behavior.
 - Open Glance dashboard group-heading links in the full tab.
-- Restore selected Glance groups and page/panel scroll positions when returning with Back.
+- Restore standard tabs, expandable sections, and page/panel scroll positions when returning with Back.
 - Store settings locally and request access only to the selected site.
 - No accounts, analytics, or developer-operated backend.
 
 ## Install
 
-Requires **desktop Firefox 140 or later**. Version 1.0.3 has not yet been signed
+Requires **desktop Firefox 140 or later**. Version 1.0.4 has not yet been signed
 or published on Mozilla Add-ons. An unsigned ZIP cannot be installed permanently
 in ordinary Firefox.
 
@@ -56,35 +56,54 @@ the final address in settings.
 
 When returning with Back or Forward, a page kept in Firefox's history cache is
 reused without resetting its iframe. If Firefox reloads it, Tab & Type restores
-the most recent Glance group selections and scroll positions saved for that
-browser tab. This temporary view state stays in memory while the extension is
-running and is cleared when you close the tab, change the site, or revoke access.
-New tabs start independently. Form values and arbitrary website application
-state are not saved. Changed page layouts or feed content can affect restoration.
+the most recent supported controls and scroll positions saved for that browser
+tab. Restoration uses standard page markup, with no Glance-specific selectors:
+
+- ARIA tabs with a tablist, selected state, and a controlled tabpanel. Glance
+  groups use this pattern and remain supported.
+- Native HTML `details` sections, including their open or closed state.
+- ARIA accordion/disclosure buttons that control a labelled `region`.
+- Page and nested element scrolling, including horizontal right-to-left scrolling.
+
+Unique element IDs keep controls identifiable when content moves. Controls
+without IDs use their position and element type, so changed layouts can affect
+restoration. Late controls are retried for up to five seconds; each control is
+activated at most once per DOM element, and user input stops restoration.
+Menus, dialogs, form entries, custom JavaScript state, and controls requiring
+trusted input are not restored. Closed shadow roots and controls without the
+supported markup are not covered. Anchor tabs that ignore canceled clicks may
+not restore; native anchor navigation is suppressed to avoid extra history entries.
+
+Temporary view state stays in memory while the extension is running and is
+cleared when you close the tab, change the site, or revoke access. New tabs start
+independently. This is best-effort restoration, not a copy of the entire app state.
 
 ## Development
 
 The extension is plain HTML, CSS, and JavaScript, with no build step or runtime
 dependencies. The installable files are in `extension/`.
 
-Run the tests with Node.js 22 or later:
+For tests, use Node.js 22.22.2+, 24.15.0+, or 26+, and pnpm 11.25.0.
+The only direct development dependency is jsdom; it is not packaged in the add-on.
 
 ```sh
-node --test tests/*.test.cjs
+pnpm install --frozen-lockfile --ignore-scripts
+pnpm test
 ```
 
 To package the committed extension source with Git:
 
 ```sh
-git -c core.autocrlf=false archive --format=zip --output=tab-and-type-1.0.3.zip HEAD:extension
+git -c core.autocrlf=false archive --format=zip --output=tab-and-type-1.0.4.zip HEAD:extension
 ```
 
 The resulting ZIP has `manifest.json` at its root. It is still unsigned.
 
-The 31 automated tests use mocked Firefox APIs and DOM events. Link navigation
+The 46 automated tests use mocked Firefox APIs and jsdom HTML fixtures. Link navigation
 was also tested in a separate Firefox 159 profile with a Glance dashboard.
-The Back/Forward restoration changes have automated regression coverage;
-they have not yet been verified in a live Firefox session.
+The Back/Forward restoration changes have automated regression coverage,
+including multiple control patterns and changed markup. Scrolling and timing are
+simulated; these changes have not yet been verified in a live Firefox session.
 See [architecture and validation notes](docs/architecture.txt) for details.
 
 ## Privacy and permissions

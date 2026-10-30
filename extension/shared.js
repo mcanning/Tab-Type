@@ -23,26 +23,47 @@ globalThis.ClearTab = Object.freeze({
     return `${url.protocol}//${url.hostname}/*`;
   },
 
-  // Only bounded view coordinates and Glance group selections cross the bridge.
+  // Only bounded coordinates and standard control state cross the bridge.
   // Never retain page HTML, form values, or arbitrary script state.
   normalizeView(value, page) {
     if (!value || value.page !== page || typeof page !== "string" || page.length > 4096) return null;
-    const coordinate = n => Number.isFinite(n) ? Math.max(0, Math.min(10000000, n)) : 0;
+    // Horizontal scrolling can be negative on right-to-left pages.
+    const coordinate = n => Number.isFinite(n) ? Math.max(-10000000, Math.min(10000000, n)) : 0;
     const path = p => Array.isArray(p) && p.length > 0 && p.length <= 32 &&
       p.every(n => Number.isInteger(n) && n >= 0 && n < 100000) ? [...p] : null;
-    const groups = [];
+    const locator = value => {
+      const location = path(value?.path);
+      if (!location || typeof value.tag !== "string" || !/^[a-z][a-z0-9-]{0,63}$/.test(value.tag)) return null;
+      const result = { path: location, tag: value.tag };
+      if (value.id !== undefined) {
+        if (typeof value.id !== "string" || !value.id || value.id.length > 256) return null;
+        result.id = value.id;
+      }
+      return result;
+    };
+    const controls = [];
     const scroll = [];
-    for (const item of (Array.isArray(value.groups) ? value.groups : []).slice(0, 64)) {
-      const location = path(item?.path);
-      if (location && Number.isInteger(item.selected) && item.selected >= 0 && item.selected < 256) {
-        groups.push({ path: location, selected: item.selected });
+    for (const item of (Array.isArray(value.controls) ? value.controls : []).slice(0, 128)) {
+      const target = locator(item?.target);
+      if (!target) continue;
+      if (item.kind === "details" && target.tag === "details" && typeof item.value === "boolean") {
+        controls.push({ kind: "details", target, value: item.value });
+      } else if (item.kind === "tab" || item.kind === "disclosure") {
+        const panel = locator(item.panel);
+        if (!panel?.id) continue;
+        if (item.kind === "tab") {
+          const list = locator(item.list);
+          if (list) controls.push({ kind: "tab", target, panel, list });
+        } else if (typeof item.value === "boolean") {
+          controls.push({ kind: "disclosure", target, panel, value: item.value });
+        }
       }
     }
     for (const item of (Array.isArray(value.scroll) ? value.scroll : []).slice(0, 128)) {
-      const location = path(item?.path);
-      if (location) scroll.push({ path: location, x: coordinate(item.x), y: coordinate(item.y) });
+      const target = locator(item?.target);
+      if (target) scroll.push({ target, x: coordinate(item.x), y: coordinate(item.y) });
     }
-    return { page, x: coordinate(value.x), y: coordinate(value.y), groups, scroll };
+    return { page, x: coordinate(value.x), y: coordinate(value.y), controls, scroll };
   },
 
   isPageAnchor(href, currentURL, rawHref = "") {
