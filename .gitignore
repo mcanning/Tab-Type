@@ -1,0 +1,10 @@
+node_modules/
+dist/
+work/
+*.zip
+*.xpi
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db

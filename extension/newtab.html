@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>New Tab</title>
+  <link rel="icon" href="icons/icon-32.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="newtab">
+  <iframe id="website" title="Your new tab website" referrerpolicy="no-referrer" hidden></iframe>
+  <main id="notice" class="card" hidden>
+    <img src="tab-and-type.svg" width="48" height="48" alt="">
+    <h1 id="notice-title">Choose your new tab page</h1>
+    <p id="notice-copy">Set a website, then open a new tab. You can type in the address bar right away.</p>
+    <div class="actions">
+      <button id="choose">Choose website</button>
+      <a id="open-normally" class="button secondary" target="_top" hidden>Open website normally</a>
+    </div>
+  </main>
+  <aside id="link-error" class="toast" role="alert" hidden>
+    <span>Couldn’t open that link.</span>
+    <a id="retry-link" target="_top">Open it here</a>
+  </aside>
+  <button id="settings" class="settings-button" title="Tab &amp; Type settings" aria-label="Tab &amp; Type settings">⚙</button>
+  <script src="newtab.js"></script>
+</body>
+</html>

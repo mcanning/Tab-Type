@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <title>Tab &amp; Type</title>
+  <rect x="4" y="4" width="120" height="120" rx="28" fill="#087f75"/>
+  <g fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="24" y="28" width="80" height="72" rx="10"/>
+    <path d="M25 48h78"/>
+    <path d="M54 64h20M64 64v22M54 86h20"/>
+  </g>
+</svg>

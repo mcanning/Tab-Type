@@ -1,0 +1,91 @@
+Tab & Type — Firefox extension, version 1.0.0
+
+Your page, ready to search.
+
+MIT licensed. See ../LICENSE for the license and ../PRIVACY.txt for
+the privacy policy. See ../PUBLISHING.txt for public Mozilla listing details.
+
+USE
+
+After installation, open a new tab, select Choose website, enter a website
+address and select Save website. Grant access to that chosen site when Firefox
+asks. No website is configured by default. Existing users keep their saved site.
+
+On a fresh new tab the extension displays that website in an iframe, leaving
+the new-tab address bar empty. Ordinary links open in the full tab. Ctrl-click,
+middle-click, downloads and in-page fragment links retain native behavior.
+Glance's active linked group headings are supported too.
+
+The chosen start page must permit embedding. Websites that prohibit embedding
+remain blocked, and those protections are never disabled. Login, cookies,
+autofocus and buttons driven entirely by website JavaScript may behave
+differently when embedded. Use the final address after any cross-host redirects.
+
+REQUIREMENTS AND DEVELOPMENT
+
+Desktop Firefox 140 or newer. For temporary development installation, open
+about:debugging#/runtime/this-firefox, choose Load Temporary Add-on and select
+extension/manifest.json. Temporary installation lasts until Firefox restarts.
+Permanent installation in ordinary Firefox requires Mozilla's signature.
+
+The internal add-on ID is retained from the original Clear New Tab prototype
+so existing users can update without losing their saved website. Public-facing
+branding is Tab & Type.
+
+CONTENTS
+
+extension/ is the complete, dependency-free add-on source. There is no build
+step. The distribution ZIP contains only those files, with manifest.json at its
+root. tests/ executes the actual packaged scripts using Node's built-in test
+runner and mocked browser APIs / DOM events.
+
+Run from this folder with Node 22 or newer:
+    node --test tests/*.test.cjs
+
+DESIGN / MOZILLA REVIEWER NOTES
+
+The extension uses chrome_url_overrides.newtab to serve a local HTML page, with
+the user's selected HTTP(S) page in an iframe. It never redirects the new-tab
+document on initial load or tries to manipulate Firefox's address-bar UI.
+
+The only required permission is storage. HTTP(S) host patterns are declared as
+optional so the user can choose any supported website. The options page requests
+one exact hostname/scheme, then releases the previous hostname on a change.
+No tabs, webNavigation, webRequest, nativeMessaging, or clipboard permission is
+requested. The tabs API is used only for the current extension tab's ID and
+navigation of the authenticated tab; those operations need no tabs permission.
+
+The persistent Manifest V2 background registers a document_start content script
+only for the selected host. Top-level pages and nested frames exit immediately.
+A direct child frame must authenticate against a live port from this extension's
+own new-tab document before its click or submit handlers take action. Background
+requests are checked against tab ID, frame ID, exact origin including port, a
+per-session token and current host permission. Ordinary visits to the site are
+unaffected. No page postMessage or page-injected privileged API is exposed.
+
+Trusted, unmodified left-clicks on HTTP(S) anchors navigate the full tab using
+tabs.update, including anchors initially marked _blank. Glance's active group
+headings (button.widget-group-title-current[data-title-url]) are also handled.
+Fragment links, downloads and modified clicks keep native behavior.
+Native form targets become _top while preserving method,
+encoding and body. JavaScript-only navigations and custom form routers are not
+guaranteed. Security headers and signature-check settings are never modified.
+
+All executable code is packaged, readable, original source; no bundler, remote
+code, dependencies, or compilation is involved. The add-on has no telemetry or
+data collection. A user-selected website is loaded directly as ordinary web
+content, subject to that site's own behavior and privacy policy.
+
+VALIDATION STATUS
+
+All 23 Node tests pass using mocked Firefox APIs and DOM events, including
+regressions for the dashboard's target rewriting and linked group headings.
+
+The link behavior was tested in real Firefox 159 with an isolated, headless
+profile and a Glance dashboard. A Hacker News article link and the Hacker News
+group-heading button both navigated the top-level tab and loaded successfully.
+The new-tab address bar was empty. Keyboard focus was not confirmed by the
+headless test; the original user subsequently confirmed the extension worked
+in their normal Firefox window. Version 1.0.0 adds release branding, the MIT
+license, privacy documentation and a blank default website field.
+Mozilla signing / AMO review has not been performed.

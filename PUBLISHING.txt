@@ -1,0 +1,83 @@
+TAB & TYPE — PUBLIC FIREFOX LISTING — VERSION 1.0.0
+
+Name: Tab & Type
+Suggested URL slug: tab-and-type (subject to availability on submission)
+Version: 1.0.0
+License: MIT
+Release package: tab-and-type-1.0.0.zip
+Source package: tab-and-type-1.0.0-source.zip
+Listing icon: extension/icons/icon-128.png
+Editable icon source: extension/tab-and-type.svg
+
+Submit the release ZIP through https://addons.mozilla.org/developers/addon/submit/
+and choose "On this site" to list it publicly on Mozilla Add-ons. The separate
+source ZIP is for sharing the complete project, tests and documentation. The
+extension itself has no build step or minified code; its release ZIP already
+contains its readable source.
+
+Mozilla may request further review or metadata. This package has not been
+submitted, signed, approved, or published. A Mozilla account must be supplied
+by the publisher.
+
+Project URL: https://github.com/mcanning/Tab-Type
+Support URL: https://github.com/mcanning/Tab-Type/issues
+
+SUMMARY
+
+Your chosen website on every new tab, with the address bar ready to search.
+
+DESCRIPTION
+
+Open your own start page whenever you create a new tab, while keeping Firefox's
+address bar empty and ready for typing. Use your existing default search engine.
+
+Choose a website in settings. Ordinary links open in the full tab, including
+links that initially request a new window. Ctrl-click, middle-click, downloads
+and in-page fragment links retain their usual behavior. Glance dashboard group
+headings are supported too.
+
+There are no accounts, subscriptions, analytics, or developer-operated servers.
+Your selected address is stored locally. Website access is requested only for
+the site you choose. The extension is open source under the MIT license.
+
+Compatibility: desktop Firefox 140 or newer. Your chosen start page must allow
+embedding. Some sites block embedded pages, and this extension respects those
+protections. Some website-script buttons, logins, cookies and autofocus may
+behave differently inside an embedded page. If your chosen site redirects to
+another hostname, save its final address.
+
+PRIVACY POLICY
+
+Use the complete text from extension/PRIVACY.txt.
+
+LICENSE
+
+MIT License. Complete text is in LICENSE and extension/LICENSE.txt.
+
+RELEASE NOTES
+
+Initial public release, version 1.0.0. Configurable start-page website, empty
+new-tab address bar, full-tab ordinary link navigation, support for Glance's
+linked group headings, local settings and optional site-specific access.
+
+REVIEWER NOTES
+
+No compilation, minification, dependencies or remote extension code. All
+extension code is in the release ZIP. Remote websites are loaded as web content
+inside an iframe, chosen explicitly by the user; they do not receive privileged
+extension APIs. Security headers are not altered. The extension never changes
+Firefox's security settings.
+
+Required permission: storage. HTTP(S) hosts are declared as optional so a user
+can choose a website; only the chosen scheme/hostname is requested at runtime.
+The page script authenticates through the extension background before handling
+links. Authorization checks the owning tab, frame, origin, per-session token
+and current site permission. Normal top-level website visits are unaffected.
+
+To test, install the extension, open a new tab, choose a website that permits
+embedding, save and allow access to that site. Open another new tab and follow
+an ordinary link. The destination should replace the full tab. No account or
+private dashboard is needed. The README describes architecture and validation.
+
+Submission guide:
+https://extensionworkshop.com/documentation/publish/submitting-an-add-on/

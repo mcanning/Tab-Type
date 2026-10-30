@@ -1,0 +1,22 @@
+Tab & Type privacy policy
+Effective date: October 30, 2026
+
+This extension does not collect analytics, telemetry, browsing history, or
+personal data for its developers. It has no developer-operated service and
+does not send your saved settings to a server.
+
+Your selected start-page address is stored locally using Firefox's extension
+storage. The extension requests access to the website you choose so it can
+handle links within that embedded page. It does not request access to your
+bookmarks, passwords, clipboard, or browsing history.
+
+When you open a new tab, Firefox loads your chosen website. That website and
+its resources make their ordinary network requests and may use cookies,
+analytics, or other data collection under the website's own policies. When
+you click a link, Firefox loads the destination you chose. Those website
+requests are separate from the extension's own data practices.
+
+You can change the selected website in the extension's settings and revoke
+its website access through Firefox's add-on permissions. The extension
+requests only the host access needed for your selected website and releases
+the previous host's permission when you save a different host.

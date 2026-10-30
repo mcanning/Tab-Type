@@ -1,0 +1,31 @@
+{
+  "manifest_version": 2,
+  "name": "Tab & Type",
+  "version": "1.0.0",
+  "description": "Show your chosen website on new tabs, keep the address bar ready, and open ordinary links in the full tab.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "clear-new-tab@personal.invalid",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": { "required": ["none"] }
+    }
+  },
+  "permissions": ["storage"],
+  "optional_permissions": ["https://*/*", "http://*/*"],
+  "background": { "scripts": ["shared.js", "background.js"], "persistent": true },
+  "chrome_url_overrides": { "newtab": "newtab.html" },
+  "options_ui": { "page": "options.html", "open_in_tab": true },
+  "browser_action": {
+    "default_title": "Tab & Type settings",
+    "default_icon": { "16": "icons/icon-16.png", "32": "icons/icon-32.png" }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "64": "icons/icon-64.png",
+    "96": "icons/icon-96.png",
+    "128": "icons/icon-128.png"
+  },
+  "content_security_policy": "script-src 'self'; object-src 'none'; base-uri 'none'; frame-src https: http:;"
+}

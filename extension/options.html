@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tab &amp; Type settings</title>
+  <link rel="icon" href="icons/icon-32.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="options">
+  <main class="card">
+    <img src="tab-and-type.svg" width="48" height="48" alt="">
+    <h1>Tab &amp; Type</h1>
+    <p>Show a website when you open a new tab. Ordinary links open in the full tab, and Firefox’s address bar stays ready when the tab first opens.</p>
+    <form id="settings-form">
+      <label for="website-url">Website address</label>
+      <input id="website-url" name="website" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="https://example.com/" maxlength="4096" required aria-describedby="address-help">
+      <p id="address-help" class="hint">Use the final address shown after the site loads, including https:// and www if present.</p>
+      <button type="submit" id="save">Save website</button>
+      <p id="status" role="status" aria-live="polite"></p>
+    </form>
+    <hr>
+    <p class="hint">Firefox will ask for access to the website you choose so this add-on can open its links correctly. Your choice stays on this device.</p>
+    <p class="hint">Some sites do not allow embedded pages. Their protections remain in place. Address-bar searches use your existing Firefox search engine.</p>
+  </main>
+  <script src="shared.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
