@@ -1,11 +1,11 @@
-TAB & TYPE — PUBLIC FIREFOX LISTING — VERSION 1.0.0
+TAB & TYPE — PUBLIC FIREFOX LISTING — VERSION 1.0.1
 
 Name: Tab & Type
-Suggested URL slug: tab-and-type (subject to availability on submission)
-Version: 1.0.0
+Suggested URL slug: tab-type (as shown in the submission form)
+Version: 1.0.1
 License: MIT
-Release package: tab-and-type-1.0.0.zip
-Source package: tab-and-type-1.0.0-source.zip
+Release package: tab-and-type-1.0.1.zip
+Source package: tab-and-type-1.0.1-source.zip
 Listing icon: extension/icons/icon-128.png
 Editable icon source: extension/tab-and-type.svg
 
@@ -56,9 +56,8 @@ MIT License. Complete text is in LICENSE and extension/LICENSE.txt.
 
 RELEASE NOTES
 
-Initial public release, version 1.0.0. Configurable start-page website, empty
-new-tab address bar, full-tab ordinary link navigation, support for Glance's
-linked group headings, local settings and optional site-specific access.
+Version 1.0.1 replaces the typing-cursor icon with a browser tab and search
+symbol for clearer recognition. Extension behavior is unchanged.
 
 REVIEWER NOTES
 

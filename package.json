@@ -1,6 +1,6 @@
 {
   "name": "tab-and-type",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "private": true,
   "description": "Firefox new-tab extension with authenticated, site-scoped link handling.",
