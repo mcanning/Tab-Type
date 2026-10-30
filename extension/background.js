@@ -3,6 +3,7 @@
 const newTabURL = browser.runtime.getURL("newtab.html");
 const optionsURL = browser.runtime.getURL("options.html");
 const sessions = new Map();
+const views = new Map();
 let registration = null;
 let configuredURL = null;
 let queue = Promise.resolve();
@@ -26,7 +27,7 @@ async function setConfiguration(rawURL, persist) {
   if (!(await hasSiteAccess(url))) throw new Error("Allow access to your chosen website first.");
   const next = await browser.contentScripts.register({
     matches: [ClearTab.permissionPattern(url)],
-    js: [{ file: "shared.js" }, { file: "page-bridge.js" }],
+    js: [{ file: "shared.js" }, { file: "page-view.js" }, { file: "page-bridge.js" }],
     allFrames: true,
     runAt: "document_start"
   });
@@ -39,6 +40,7 @@ async function setConfiguration(rawURL, persist) {
   const previous = registration;
   registration = next;
   configuredURL = url;
+  views.clear();
   if (previous) await previous.unregister().catch(() => {});
   for (const session of sessions.values()) tell(session, { type: "configuration-changed" });
   return { ok: true, url };
@@ -74,6 +76,9 @@ browser.runtime.onConnect.addListener(port => {
       if (ownedSession && sessions.get(ownedSession.tabId) === ownedSession) {
         sessions.delete(ownedSession.tabId);
       }
+      const saved = message.resume === true && views.get(message.tabId);
+      const view = saved && saved.url === configuredURL ? saved.view : null;
+      if (!view) views.delete(message.tabId);
       ownedSession = {
         tabId: message.tabId,
         port,
@@ -81,10 +86,17 @@ browser.runtime.onConnect.addListener(port => {
         origin: new URL(configuredURL).origin,
         token: crypto.randomUUID(),
         frameId: null,
-        opening: false
+        opening: false,
+        view
       };
       sessions.set(message.tabId, ownedSession);
-      port.postMessage({ type: "show-page", url: ownedSession.url });
+      port.postMessage({ type: "show-page", url: view?.page || ownedSession.url,
+        ...(message.resume === true ? { resume: true, siteURL: ownedSession.url } : {}) });
+      // A cached iframe may already exist, so its document_start script will
+      // not run again. Ask it to authenticate against the new session token.
+      if (message.resume === true) {
+        void browser.tabs.sendMessage(message.tabId, { type: "resume-bridge" }).catch(() => {});
+      }
     })().catch(error => {
       try { port.postMessage({ type: "error", message: error.message }); } catch (_) {}
     });
@@ -98,7 +110,7 @@ browser.runtime.onMessage.addListener((message, sender) => {
   if (message?.type === "configuration" && sender.url === optionsURL) {
     return ready.then(() => ({ url: configuredURL }));
   }
-  if (!["bridge-ready", "open-link"].includes(message?.type)) return undefined;
+  if (!["bridge-ready", "open-link", "save-view"].includes(message?.type)) return undefined;
   return (async () => {
     const session = sessions.get(sender.tab?.id);
     if (!session || !Number.isInteger(sender.frameId) || sender.frameId <= 0) return { ok: false };
@@ -111,11 +123,20 @@ browser.runtime.onMessage.addListener((message, sender) => {
       if (session.frameId !== null && session.frameId !== sender.frameId) return { ok: false };
       session.frameId = sender.frameId;
       tell(session, { type: "page-ready" });
-      return { ok: true, token: session.token };
+      const view = session.view?.page === sender.url ? session.view : null;
+      session.view = null;
+      return { ok: true, token: session.token, ...(view ? { view } : {}) };
     }
     if (sender.frameId !== session.frameId || message.token !== session.token || session.opening) {
       return { ok: false };
     }
+    const view = ClearTab.normalizeView(message.view, sender.url);
+    if (view) {
+      views.delete(session.tabId);
+      views.set(session.tabId, { url: session.url, view });
+      if (views.size > 200) views.delete(views.keys().next().value);
+    }
+    if (message.type === "save-view") return { ok: Boolean(view) };
     let href;
     try { href = ClearTab.normalizeWebsite(message.href); } catch (_) { return { ok: false }; }
     // A link supplies an absolute URL; never interpret a message as a search.
@@ -139,10 +160,16 @@ browser.permissions.onRemoved.addListener(() => {
       if (registration) await registration.unregister().catch(() => {});
       registration = null;
       configuredURL = null;
+      views.clear();
       for (const session of sessions.values()) tell(session, { type: "setup-needed" });
       sessions.clear();
     }
   });
+});
+
+browser.tabs.onRemoved.addListener(tabId => {
+  views.delete(tabId);
+  sessions.delete(tabId);
 });
 
 browser.browserAction.onClicked.addListener(() => browser.runtime.openOptionsPage());

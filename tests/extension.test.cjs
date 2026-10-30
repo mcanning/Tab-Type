@@ -45,7 +45,7 @@ async function background({ stored = "https://www.mlb.com/", allowed = ["https:/
       registrations.push(registration);
       return { unregister: async () => { registration.active = false; } };
     } },
-    tabs: { update: async (id, data) => {
+    tabs: { onRemoved: eventChannel(), sendMessage: async () => {}, update: async (id, data) => {
       if (failures.navigate) throw new Error("navigation failed");
       navigations.push({ id, ...copy(data) });
       return { id };
@@ -58,11 +58,11 @@ async function background({ stored = "https://www.mlb.com/", allowed = ["https:/
   const send = (message, sender = { url: ownURL("options.html") }) =>
     browser.runtime.onMessage.listeners[0](message, sender);
   await send({ type: "configuration" });
-  async function connect(id = 7, sender = { url: ownURL("newtab.html"), tab: { id } }) {
+  async function connect(id = 7, sender = { url: ownURL("newtab.html"), tab: { id } }, resume = false) {
     const messages = [];
     const port = { name: "clear-new-tab", sender, onMessage: eventChannel(), onDisconnect: eventChannel(), postMessage: msg => messages.push(copy(msg)) };
     browser.runtime.onConnect.emit(port);
-    port.onMessage.emit({ type: "start", tabId: id });
+    port.onMessage.emit({ type: "start", tabId: id, resume });
     await flush();
     return { port, messages };
   }
@@ -86,15 +86,22 @@ async function bridge({ mode = "iframe", authorized = true, baseTarget = null, b
   const listeners = {};
   const messages = [];
   const top = {};
-  const window = { top, parent: top, addEventListener: (type, callback) => { listeners[type] = callback; } };
+  const window = { top, parent: top, addEventListener: (type, callback, capture) => {
+    if (type !== "click" || capture) listeners[type] = callback;
+  } };
   if (mode === "top") window.top = window.parent = window;
   if (mode === "nested") window.parent = {};
   const document = { baseURI, querySelector: () => baseTarget === null ? null : element("base", { target: baseTarget }) };
-  const browser = { runtime: { sendMessage: async message => {
+  const browser = { runtime: { id: "test-addon", onMessage: eventChannel(), sendMessage: async message => {
     messages.push(copy(message));
     return message.type === "bridge-ready" ? { ok: authorized, token: "test-token" } : sendResult;
   } } };
-  const context = vm.createContext({ window, document, location: { href: "https://www.mlb.com/" }, browser, URL });
+  const view = { page: "https://www.mlb.com/", x: 0, y: 700, groups: [], scroll: [] };
+  const timers = new Map();
+  let nextTimer = 0;
+  const context = vm.createContext({ window, document, location: { href: "https://www.mlb.com/" }, browser, URL,
+    ClearTabView: { capture: () => view, restore: (_, done) => { done(); return () => {}; } },
+    setTimeout: fn => { timers.set(++nextTimer, fn); return nextTimer; }, clearTimeout: id => timers.delete(id) });
   run(context, "shared.js");
   run(context, "page-bridge.js");
   await flush();
@@ -111,7 +118,7 @@ async function bridge({ mode = "iframe", authorized = true, baseTarget = null, b
     listeners.click?.(event);
     return event;
   }
-  return { listeners, messages, click };
+  return { listeners, messages, click, browser, view, timers };
 }
 
 test("website input accepts ordinary URLs and rejects privileged URLs and credentials", () => {
@@ -236,7 +243,7 @@ test("a real ordinary link, including a click on its SVG child, opens in the ful
   const click = br.click({ href: "https://news.ycombinator.com/" });
   assert.equal(click.prevented, true);
   assert.equal(click.stopped, true);
-  assert.deepEqual(br.messages.at(-1), { type: "open-link", href: "https://news.ycombinator.com/", token: "test-token" });
+  assert.deepEqual(br.messages.at(-1), { type: "open-link", href: "https://news.ycombinator.com/", token: "test-token", view: br.view });
 });
 
 test("relative links resolve against the document base and work without pre-scanning anchors", async () => {
@@ -301,7 +308,8 @@ test("native forms are targeted to the full tab without changing method or body"
   br.listeners.submit({ isTrusted: true, target: form, submitter });
   assert.deepEqual(form.attributes, { method: "post", action: "https://example.com/search", enctype: "multipart/form-data", target: "_top" });
   assert.deepEqual(submitter.attributes, { formtarget: "_top", name: "go", value: "Search" });
-  assert.equal(br.messages.length, 1);
+  assert.equal(br.messages.length, 2);
+  assert.equal(br.messages.at(-1).type, "save-view");
   const blank = element("form", { target: "_blank" });
   br.listeners.submit({ isTrusted: true, target: blank });
   assert.equal(blank.getAttribute("target"), "_blank");
@@ -331,4 +339,72 @@ test("all packaged JavaScript parses and manifest entry points exist", () => {
   }
   assert.deepEqual(manifest.permissions, ["storage"]);
   assert.deepEqual(manifest.browser_specific_settings.gecko.data_collection_permissions.required, ["none"]);
+});
+
+test("Back restores only that tab's saved dashboard view and renews bridge authorization", async () => {
+  const bg = await background();
+  const original = await bg.connect();
+  const { token } = await bg.send({ type: "bridge-ready" }, bg.pageSender());
+  const view = { page: "https://www.mlb.com/", x: 0, y: 900,
+    groups: [{ path: [1, 2], selected: 2 }], scroll: [{ path: [1, 4], x: 120, y: 70 }] };
+  assert.equal((await bg.send({ type: "open-link", token, href: "https://example.com/", view }, bg.pageSender())).ok, true);
+  original.port.onDisconnect.emit();
+  const restored = await bg.connect(7, undefined, true);
+  assert.deepEqual(restored.messages[0], { type: "show-page", url: view.page, resume: true, siteURL: view.page });
+  const resumed = await bg.send({ type: "bridge-ready" }, bg.pageSender());
+  assert.deepEqual(copy(resumed.view), view);
+  assert.notEqual(resumed.token, token);
+  assert.equal((await bg.send({ type: "open-link", token, href: "https://example.com/" }, bg.pageSender())).ok, false);
+  assert.equal((await bg.send({ type: "bridge-ready" }, bg.pageSender())).view, undefined, "Do not apply an old view twice");
+  assert.equal((await bg.send({ type: "open-link", token: resumed.token, href: "https://example.com/" }, bg.pageSender())).ok, true);
+  await bg.connect(8, undefined, true);
+  assert.equal((await bg.send({ type: "bridge-ready" }, bg.pageSender({ tab: { id: 8 } }))).view, undefined);
+});
+
+test("view snapshots require the authenticated frame/token and contain only bounded view state", async () => {
+  const bg = await background();
+  await bg.connect();
+  const { token } = await bg.send({ type: "bridge-ready" }, bg.pageSender());
+  const view = { page: "https://www.mlb.com/", y: 700, password: "do not retain", html: "do not retain",
+    groups: [{ path: [1], selected: 2 }, { path: [-1], selected: 4 }], scroll: [] };
+  for (const [badToken, sender] of [["wrong", bg.pageSender()], [token, bg.pageSender({ frameId: 3 })],
+    [token, bg.pageSender({ url: "https://evil.example/" })]]) {
+    assert.equal((await bg.send({ type: "save-view", token: badToken, view }, sender)).ok, false);
+  }
+  assert.equal((await bg.send({ type: "save-view", token, view: { ...view, page: "https://evil.example/" } }, bg.pageSender())).ok, false);
+  assert.equal((await bg.send({ type: "save-view", token, view }, bg.pageSender())).ok, true);
+  await bg.connect(7, undefined, true);
+  const restored = await bg.send({ type: "bridge-ready" }, bg.pageSender());
+  assert.deepEqual(copy(restored.view), { page: view.page, x: 0, y: 700, groups: [{ path: [1], selected: 2 }], scroll: [] });
+});
+
+test("fresh new tabs, closing a tab, changing the site and revoking access discard saved views", async () => {
+  for (const reset of ["fresh", "closed", "configured", "revoked"]) {
+    const bg = await background();
+    await bg.connect();
+    const { token } = await bg.send({ type: "bridge-ready" }, bg.pageSender());
+    await bg.send({ type: "save-view", token, view: { page: "https://www.mlb.com/", y: 900 } }, bg.pageSender());
+    if (reset === "closed") bg.browser.tabs.onRemoved.emit(7);
+    if (reset === "configured") await bg.send({ type: "configure", url: "https://www.mlb.com/" });
+    if (reset === "revoked") {
+      bg.grants.clear();
+      bg.browser.permissions.onRemoved.emit();
+      await flush();
+      bg.grants.add("https://www.mlb.com/*");
+      await bg.send({ type: "configure", url: "https://www.mlb.com/" });
+    }
+    await bg.connect(7, undefined, reset !== "fresh");
+    assert.equal((await bg.send({ type: "bridge-ready" }, bg.pageSender())).view, undefined, reset);
+  }
+});
+
+test("a cached frame can follow links again after Back", async () => {
+  const br = await bridge();
+  br.click();
+  br.listeners.pagehide({ persisted: true });
+  assert.equal(br.click().prevented, false, "Hidden frames must lose authorization");
+  br.listeners.pageshow({ persisted: true });
+  await flush();
+  assert.equal(br.click().prevented, true);
+  assert.equal(br.messages.filter(message => message.type === "open-link").length, 2);
 });

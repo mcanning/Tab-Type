@@ -23,6 +23,28 @@ globalThis.ClearTab = Object.freeze({
     return `${url.protocol}//${url.hostname}/*`;
   },
 
+  // Only bounded view coordinates and Glance group selections cross the bridge.
+  // Never retain page HTML, form values, or arbitrary script state.
+  normalizeView(value, page) {
+    if (!value || value.page !== page || typeof page !== "string" || page.length > 4096) return null;
+    const coordinate = n => Number.isFinite(n) ? Math.max(0, Math.min(10000000, n)) : 0;
+    const path = p => Array.isArray(p) && p.length > 0 && p.length <= 32 &&
+      p.every(n => Number.isInteger(n) && n >= 0 && n < 100000) ? [...p] : null;
+    const groups = [];
+    const scroll = [];
+    for (const item of (Array.isArray(value.groups) ? value.groups : []).slice(0, 64)) {
+      const location = path(item?.path);
+      if (location && Number.isInteger(item.selected) && item.selected >= 0 && item.selected < 256) {
+        groups.push({ path: location, selected: item.selected });
+      }
+    }
+    for (const item of (Array.isArray(value.scroll) ? value.scroll : []).slice(0, 128)) {
+      const location = path(item?.path);
+      if (location) scroll.push({ path: location, x: coordinate(item.x), y: coordinate(item.y) });
+    }
+    return { page, x: coordinate(value.x), y: coordinate(value.y), groups, scroll };
+  },
+
   isPageAnchor(href, currentURL, rawHref = "") {
     const target = new URL(href, currentURL);
     const current = new URL(currentURL);

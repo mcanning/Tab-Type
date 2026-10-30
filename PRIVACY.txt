@@ -10,6 +10,13 @@ storage. The extension requests access to the website you choose so it can
 handle links within that embedded page. It does not request access to your
 bookmarks, passwords, clipboard, or browsing history.
 
+To restore your place when you use Back or Forward, the extension temporarily
+keeps the most recent start-page URL, selected Glance groups and scroll positions
+for each browser tab in memory. It does not retain page HTML, form entries or
+arbitrary website application state. These view snapshots are not sent anywhere
+or written to extension storage. They are cleared when the tab closes, the
+selected site changes, access is revoked, or the extension stops running.
+
 When you open a new tab, Firefox loads your chosen website. That website and
 its resources make their ordinary network requests and may use cookies,
 analytics, or other data collection under the website's own policies. When

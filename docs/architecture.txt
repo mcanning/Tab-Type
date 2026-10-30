@@ -1,4 +1,4 @@
-Tab & Type — Firefox extension, version 1.0.2
+Tab & Type — Firefox extension, version 1.0.3
 
 Your page, ready to search.
 
@@ -15,6 +15,13 @@ On a fresh new tab the extension displays that website in an iframe, leaving
 the new-tab address bar empty. Ordinary links open in the full tab. Ctrl-click,
 middle-click, downloads and in-page fragment links retain native behavior.
 Glance's active linked group headings are supported too.
+
+Back/Forward navigation reuses cached iframes or restores the most recent
+selected Glance groups and page/panel scroll positions for that browser tab.
+State is temporary, bounded background memory, cleared on tab closure, site
+change or revocation. It is not shared between tabs or stored on disk.
+Firefox may still reload the page; changed layouts, feed content and arbitrary
+website application state are outside the restoration guarantee.
 
 The chosen start page must permit embedding. Websites that prohibit embedding
 remain blocked, and those protections are never disabled. Login, cookies,
@@ -60,7 +67,9 @@ only for the selected host. Top-level pages and nested frames exit immediately.
 A direct child frame must authenticate against a live port from this extension's
 own new-tab document before its click or submit handlers take action. Background
 requests are checked against tab ID, frame ID, exact origin including port, a
-per-session token and current host permission. Ordinary visits to the site are
+per-session token and current host permission. Snapshot messages require the
+same authorization and are restricted to bounded view-state fields whose URL
+matches the sending frame. Ordinary visits to the site are
 unaffected. No page postMessage or page-injected privileged API is exposed.
 
 Trusted, unmodified left-clicks on HTTP(S) anchors navigate the full tab using
@@ -78,8 +87,12 @@ content, subject to that site's own behavior and privacy policy.
 
 VALIDATION STATUS
 
-All 23 Node tests pass using mocked Firefox APIs and DOM events, including
+All 31 Node tests pass using mocked Firefox APIs and DOM events, including
 regressions for the dashboard's target rewriting and linked group headings.
+Back/Forward regressions cover cached and reloaded documents, group and nested
+scroll restoration, user interruption, late widget setup, tab isolation,
+revocation, snapshot validation and renewed bridge authorization. These new
+changes have not yet been tested in a live Firefox session.
 
 The link behavior was tested in real Firefox 159 with an isolated, headless
 profile and a Glance dashboard. A Hacker News article link and the Hacker News
@@ -92,4 +105,6 @@ Version 1.0.1 replaces the typing-cursor icon with a browser tab and search
 symbol. Extension behavior is unchanged.
 Version 1.0.2 removes the custom favicon from the new-tab page, leaving the
 tab icon to Firefox. The settings page and add-on keep their branded icons.
+Version 1.0.3 adds temporary view restoration after Back/Forward navigation
+and reconnects cached frames without resetting their document or click state.
 Mozilla signing / AMO review has not been performed.

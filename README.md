@@ -16,12 +16,13 @@ Your existing Firefox search engine handles anything you type in the address bar
 - Open ordinary links in the full tab, including links initially marked to open a new window.
 - Keep normal Ctrl-click, middle-click, download, and in-page anchor behavior.
 - Open Glance dashboard group-heading links in the full tab.
+- Restore selected Glance groups and page/panel scroll positions when returning with Back.
 - Store settings locally and request access only to the selected site.
 - No accounts, analytics, or developer-operated backend.
 
 ## Install
 
-Requires **desktop Firefox 140 or later**. Version 1.0.2 has not yet been signed
+Requires **desktop Firefox 140 or later**. Version 1.0.3 has not yet been signed
 or published on Mozilla Add-ons. An unsigned ZIP cannot be installed permanently
 in ordinary Firefox.
 
@@ -53,6 +54,14 @@ differently. Embedded login flows, cookies, popups, and autofocus can also diffe
 from a normal visit. If the start page redirects to a different hostname, save
 the final address in settings.
 
+When returning with Back or Forward, a page kept in Firefox's history cache is
+reused without resetting its iframe. If Firefox reloads it, Tab & Type restores
+the most recent Glance group selections and scroll positions saved for that
+browser tab. This temporary view state stays in memory while the extension is
+running and is cleared when you close the tab, change the site, or revoke access.
+New tabs start independently. Form values and arbitrary website application
+state are not saved. Changed page layouts or feed content can affect restoration.
+
 ## Development
 
 The extension is plain HTML, CSS, and JavaScript, with no build step or runtime
@@ -67,13 +76,15 @@ node --test tests/*.test.cjs
 To package the committed extension source with Git:
 
 ```sh
-git archive --format=zip --output=tab-and-type-1.0.2.zip HEAD:extension
+git -c core.autocrlf=false archive --format=zip --output=tab-and-type-1.0.3.zip HEAD:extension
 ```
 
 The resulting ZIP has `manifest.json` at its root. It is still unsigned.
 
-The 23 automated tests use mocked Firefox APIs and DOM events. Link navigation
+The 31 automated tests use mocked Firefox APIs and DOM events. Link navigation
 was also tested in a separate Firefox 159 profile with a Glance dashboard.
+The Back/Forward restoration changes have automated regression coverage;
+they have not yet been verified in a live Firefox session.
 See [architecture and validation notes](docs/architecture.txt) for details.
 
 ## Privacy and permissions

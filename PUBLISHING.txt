@@ -1,11 +1,11 @@
-TAB & TYPE — PUBLIC FIREFOX LISTING — VERSION 1.0.2
+TAB & TYPE — PUBLIC FIREFOX LISTING — VERSION 1.0.3
 
 Name: Tab & Type
 Suggested URL slug: tab-type (as shown in the submission form)
-Version: 1.0.2
+Version: 1.0.3
 License: MIT
-Release package: tab-and-type-1.0.2.zip
-Source package: tab-and-type-1.0.2-source.zip
+Release package: tab-and-type-1.0.3.zip
+Source package: tab-and-type-1.0.3-source.zip
 Listing icon: extension/icons/icon-128.png
 Editable icon source: extension/tab-and-type.svg
 
@@ -36,6 +36,10 @@ links that initially request a new window. Ctrl-click, middle-click, downloads
 and in-page fragment links retain their usual behavior. Glance dashboard group
 headings are supported too.
 
+Returning with Back restores the most recent selected Glance groups and scroll
+positions for that browser tab. Firefox may still reload the site. Changed page
+layouts or feed content can affect restoration.
+
 There are no accounts, subscriptions, analytics, or developer-operated servers.
 Your selected address is stored locally. Website access is requested only for
 the site you choose. The extension is open source under the MIT license.
@@ -56,8 +60,9 @@ MIT License. Complete text is in LICENSE and extension/LICENSE.txt.
 
 RELEASE NOTES
 
-Version 1.0.2 removes the custom favicon from the new-tab page, leaving the
-tab icon to Firefox. The settings page and add-on keep their branded icons.
+Version 1.0.3 restores selected Glance dashboard groups and page/panel scroll
+positions after returning with Back. Cached frames are reused without resetting
+their content, and restored frames reconnect so links continue to work.
 
 REVIEWER NOTES
 
@@ -72,6 +77,14 @@ can choose a website; only the chosen scheme/hostname is requested at runtime.
 The page script authenticates through the extension background before handling
 links. Authorization checks the owning tab, frame, origin, per-session token
 and current site permission. Normal top-level website visits are unaffected.
+
+View snapshots contain only the selected page URL, Glance group indexes, DOM
+element paths and scroll coordinates. They remain in bounded background memory,
+scoped to a tab and configured site, and are cleared on tab closure, site change
+or permission revocation. Page HTML, form values and arbitrary app state are
+never retained. No history API permission is requested. Cached documents
+disconnect on pagehide and reconnect on pageshow; reloaded documents request
+their latest saved view only for a Back/Forward navigation.
 
 To test, install the extension, open a new tab, choose a website that permits
 embedding, save and allow access to that site. Open another new tab and follow
