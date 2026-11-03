@@ -1,11 +1,11 @@
-TAB & TYPE — PUBLIC FIREFOX LISTING — VERSION 1.0.4
+TAB & TYPE — PUBLIC FIREFOX LISTING — VERSION 1.0.5
 
 Name: Tab & Type
 Suggested URL slug: tab-type (as shown in the submission form)
-Version: 1.0.4
+Version: 1.0.5
 License: MIT
-Release package: tab-and-type-1.0.4.zip
-Source package: tab-and-type-1.0.4-source.zip
+Release package: tab-and-type-1.0.5.zip
+Source package: tab-and-type-1.0.5-source.zip
 Listing icon: extension/icons/icon-128.png
 Editable icon source: extension/tab-and-type.svg
 
@@ -36,10 +36,10 @@ links that initially request a new window. Ctrl-click, middle-click, downloads
 and in-page fragment links retain their usual behavior. Glance dashboard group
 headings are supported too.
 
-Returning with Back restores supported standard tabs, expandable sections and
-scroll positions for that browser tab. Glance groups use the same standard tab
-handling. Firefox may still reload the site. Custom application state and
-changed layouts are not guaranteed to restore.
+Returning with Back restores Glance dashboard groups, expanded "Show more"
+lists/grids, and scroll positions for that browser tab. Firefox can still reload
+the site before restoration. Custom application state and changed layouts are
+not guaranteed to restore.
 
 There are no accounts, subscriptions, analytics, or developer-operated servers.
 Your selected address is stored locally. Website access is requested only for
@@ -61,12 +61,12 @@ MIT License. Complete text is in LICENSE and extension/LICENSE.txt.
 
 RELEASE NOTES
 
-Version 1.0.4 makes Back/Forward view restoration work across sites using standard
-ARIA tabs, native expandable sections, and ARIA accordions with labelled regions.
-Glance groups continue to work through the same standard tab handling. Stable
-element IDs improve restoration when content moves. Horizontal right-to-left
-scrolling is supported. Restoration stops on user input and avoids repeated
-activation of unresponsive controls. No new permissions are required.
+Version 1.0.5 restores the Glance-specific behavior from 1.0.3 and adds support
+for remembering expanded "Show more" lists and card grids when returning with
+Back or Forward. Sections reopen before restoring scroll positions, and "Show
+less" continues to work normally. Sections you closed stay closed. The generic
+control restoration introduced in 1.0.4 has been removed. No new permissions
+are required. The page may still reload before its saved view is restored.
 
 REVIEWER NOTES
 
@@ -82,23 +82,23 @@ The page script authenticates through the extension background before handling
 links. Authorization checks the owning tab, frame, origin, per-session token
 and current site permission. Normal top-level website visits are unaffected.
 
-View snapshots contain only the selected page URL, standard control states,
-DOM element IDs/paths/types and scroll coordinates. They remain in bounded background memory,
+View snapshots contain only the selected page URL, Glance group selections,
+list/grid expansion booleans, DOM element paths and scroll coordinates. They remain in bounded background memory,
 scoped to a tab and configured site, and are cleared on tab closure, site change
 or permission revocation. Page HTML, form values and arbitrary app state are
 never retained. No history API permission is requested. Cached documents
 disconnect on pagehide and reconnect on pageshow; reloaded documents request
 their latest saved view only for a Back/Forward navigation.
 
-Restoration recognizes ARIA tabs linked to tabpanels, native details sections,
-and ARIA disclosure buttons linked to a region labelled by that button. It does
-not infer actions from CSS classes or replay arbitrary clicks. It checks the
-current control semantics again before restoring, skips active controls and
-form-submit/popup actions, and suppresses anchor navigation during restoration.
-Retrying stops after five seconds or immediately on user input. Controls without
-the supported markup and arbitrary JavaScript app state are not restored.
+Restoration uses Glance's group, list/grid and expand-toggle selectors. It calls
+the site's handler only when the saved state differs from the current state.
+Expand toggles must immediately follow the matching list/grid, and cannot be
+disabled or submit forms. Already expanded sections are not toggled closed.
+Expansion buttons are activated at most once per DOM element. Retrying stops
+after five seconds or immediately on user input. Other sites' custom controls,
+generic ARIA tabs, details and accordions are not restored.
 
-The source package includes 46 automated tests and a pnpm lockfile. jsdom is a
+The source package includes 38 automated tests and a pnpm lockfile. jsdom is a
 development-only dependency used by HTML fixture tests, not extension code.
 Use the README's installation and test commands to run the suite. No test
 dependencies or generated code are included in the release ZIP.

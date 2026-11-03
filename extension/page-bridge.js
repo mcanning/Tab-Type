@@ -111,8 +111,6 @@
 
   window.addEventListener("scroll", queueSave, true);
   window.addEventListener("click", queueSave);
-  window.addEventListener("keyup", queueSave);
-  window.addEventListener("toggle", queueSave, true);
   window.addEventListener("pagehide", event => {
     saveView();
     active = false;

@@ -1,4 +1,4 @@
-Tab & Type — Firefox extension, version 1.0.4
+Tab & Type — Firefox extension, version 1.0.5
 
 Your page, ready to search.
 
@@ -16,13 +16,14 @@ the new-tab address bar empty. Ordinary links open in the full tab. Ctrl-click,
 middle-click, downloads and in-page fragment links retain native behavior.
 Glance's active linked group headings are supported too.
 
-Back/Forward navigation reuses cached iframes or restores the most recent
-standard tab selections, expandable sections and page/panel scroll positions
-for that browser tab. Glance groups use the same standard ARIA tab handling.
+Back/Forward navigation restores the most recent Glance group selections,
+Show more list/grid expansion states and page/panel scroll positions for that
+browser tab. Generic control restoration from 1.0.4 has been removed.
 State is temporary, bounded background memory, cleared on tab closure, site
 change or revocation. It is not shared between tabs or stored on disk.
-Firefox may still reload the page; changed layouts, feed content and arbitrary
-website application state are outside the restoration guarantee.
+Firefox can still reload the page before restoration. This is not native page
+caching. Changed layouts, feed content and arbitrary website application state
+are outside the restoration guarantee.
 
 The chosen start page must permit embedding. Websites that prohibit embedding
 remain blocked, and those protections are never disabled. Login, cookies,
@@ -88,51 +89,59 @@ remote code, runtime dependencies, or compilation is involved. The add-on has no
 data collection. A user-selected website is loaded directly as ordinary web
 content, subject to that site's own behavior and privacy policy.
 
-GENERIC VIEW RESTORATION
+GLANCE VIEW RESTORATION
 
-page-view.js uses semantic HTML/ARIA rather than dashboard-specific selectors:
-- Tabs need role=tab, aria-selected, a containing tablist and aria-controls
-  pointing to a tabpanel. Only the selected tab per list is saved.
-- Native details elements save both open and closed states.
-- Accordion/disclosure buttons need aria-expanded and aria-controls pointing
-  to a role=region whose aria-labelledby references the button's unique ID.
+page-view.js restores the 1.0.3 group-selection and scroll behavior:
+- .widget-type-group contains a .widget-header with button.widget-group-title
+  children; the selected title has .widget-group-title-current.
+- Groups are identified by child-element path, and the title by its index.
+- Inactive titles invoke the dashboard's handler; active linked titles are
+  never clicked during restoration.
 
-Snapshots identify elements by unique ID when available, otherwise by a bounded
-child-element path and tag name. Missing/duplicate IDs do not fall back to old
-paths. Restoring verifies the control type and its list/panel relationships
-again. IDs can survive reordered DOM content; paths cannot reliably do so.
-No text labels, page HTML, field values, or arbitrary script data are captured.
-The serializer retains at most 128 controls and 128 scrolled elements per view,
-with bounded paths, IDs and coordinates. The background retains at most 200
-tab snapshots. Right-to-left horizontal offsets may be negative.
+Version 1.0.5 adds Glance's Show more/less controls:
+- .list.collapsible-container[data-collapse-after], or
+  .cards-grid.collapsible-container[data-collapse-after-rows].
+- A nonnegative integer collapse limit and an immediate following sibling
+  button.expand-toggle-button are required. Disabled, inert, editable and
+  form-submit controls, formaction and data-title-url buttons are excluded.
+- Both expanded and collapsed states are saved as booleans, including sections
+  inside inactive groups. The container's .container-expanded class is read.
+- If restoration needs a change, the toggle is clicked at most once per DOM
+  element. This updates Glance's internal expanded variable, both CSS classes
+  and the Show more/less label together. No class-only imitation is performed.
+- Group selection and expansion happen before page/element scroll restoration.
 
-Each changed tab/disclosure activates its site handler once per DOM element,
-so the site's internal state agrees with its visible selection. An already
-active control is never clicked. Native details are assigned only when needed.
-Closing sections are applied before opening them. Disabled, inert, editable,
-form-submit and popup controls are excluded. Links must be same-page anchors;
-their native navigation is canceled to avoid creating history entries. Site
-handlers requiring trusted or uncanceled anchor events may not restore.
+The serializer retains at most 64 groups, 128 expansion states and 128 scrolled
+elements per view. Paths contain at most 32 child indexes. Coordinates retain
+the 1.0.3 bounds (zero to ten million). The background keeps at most 200 tab
+snapshots. No text labels, HTML, form values or arbitrary script data are saved.
+Paths rely on a consistent document layout; inserting/reordering widgets can
+prevent restoration or associate a saved path with a different matching widget.
 
-Restoration waits for DOMContentLoaded and retries missing controls or unsettled
-scroll positions for up to five seconds, stopping after five stable checks or
-immediately on trusted user input. Unresponsive controls are not clicked again;
-replacement DOM nodes may be retried. This cannot reconstruct arbitrary app
-state, custom controls, shadow-root content, or changed feed contents.
-Keyboard changes and details toggle events also schedule snapshots. Form values
-are excluded, and snapshots still require the authenticated frame and token.
+Restoration waits for DOMContentLoaded, retries for at most five seconds and
+stops after five stable checks or on trusted user input. Delayed widget markup
+and generated toggle buttons can arrive during the retry period. Other sites'
+ARIA tabs, details, accordions and arbitrary application state are not restored.
+Snapshots require the authenticated frame and token. The 1.0.3 click/scroll and
+navigation capture behavior is retained.
 
-Markup reference: https://www.w3.org/WAI/ARIA/apg/patterns/tabs/
-Details reference: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/details
+Glance reference:
+https://github.com/glanceapp/glance/blob/main/internal/glance/static/js/page.js
+
+The wrapper retains its defensive cached-pageshow handling, but that is not
+proof of native cache eligibility. Firefox's multiple-top-level-context rule
+can exclude extension pages sharing a browsing-context group with a persistent
+background page. No Firefox caching or security settings have been changed.
 
 VALIDATION STATUS
 
-All 46 Node tests pass using mocked Firefox APIs and jsdom HTML fixtures, including
+All 38 Node tests pass using mocked Firefox APIs and jsdom HTML fixtures, including
 regressions for the dashboard's target rewriting and linked group headings.
-Back/Forward regressions cover cached and reloaded documents, standard and Glance
-tabs, nested tablists, native details, ARIA accordions, scrolling, moved/changed
-controls, unsafe action exclusion, user interruption, late inserted controls,
-tab isolation, revocation, snapshot validation and renewed bridge authorization.
+Back/Forward regressions cover simulated cached and reloaded wrapper documents,
+Glance groups, Show more lists/grids and working Show less afterward, hidden
+group sections, expansion before scrolling, unsafe/changed controls, delayed
+widgets, user interruption, bounded retries, tab isolation, revocation,
+snapshot validation and renewed bridge authorization.
 Timing and scrolling are simulated; jsdom does not reproduce Firefox layout,
 browser UI or its history cache. These new
 changes have not yet been tested in a live Firefox session.
@@ -152,4 +161,5 @@ Version 1.0.3 adds temporary view restoration after Back/Forward navigation
 and reconnects cached frames without resetting their document or click state.
 Version 1.0.4 replaces Glance-specific restoration with standard HTML/ARIA
 control handling, stable IDs, bounded activation and generic DOM regressions.
-Version 1.0.4 has not been submitted for Mozilla signing / AMO review.
+Version 1.0.5 returns to 1.0.3 restoration and adds Glance Show more/less state.
+Version 1.0.5 has not been submitted for Mozilla signing / AMO review.

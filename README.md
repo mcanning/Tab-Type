@@ -16,13 +16,13 @@ Your existing Firefox search engine handles anything you type in the address bar
 - Open ordinary links in the full tab, including links initially marked to open a new window.
 - Keep normal Ctrl-click, middle-click, download, and in-page anchor behavior.
 - Open Glance dashboard group-heading links in the full tab.
-- Restore standard tabs, expandable sections, and page/panel scroll positions when returning with Back.
+- Restore Glance groups, expanded "Show more" lists/grids, and page/panel scroll positions when returning with Back.
 - Store settings locally and request access only to the selected site.
 - No accounts, analytics, or developer-operated backend.
 
 ## Install
 
-Requires **desktop Firefox 140 or later**. Version 1.0.4 has not yet been signed
+Requires **desktop Firefox 140 or later**. Version 1.0.5 has not yet been signed
 or published on Mozilla Add-ons. An unsigned ZIP cannot be installed permanently
 in ordinary Firefox.
 
@@ -54,25 +54,23 @@ differently. Embedded login flows, cookies, popups, and autofocus can also diffe
 from a normal visit. If the start page redirects to a different hostname, save
 the final address in settings.
 
-When returning with Back or Forward, a page kept in Firefox's history cache is
-reused without resetting its iframe. If Firefox reloads it, Tab & Type restores
-the most recent supported controls and scroll positions saved for that browser
-tab. Restoration uses standard page markup, with no Glance-specific selectors:
+Version 1.0.5 returns to the Glance-specific restoration used in 1.0.3 and adds
+"Show more" support. Returning with Back or Forward can still reload the page;
+the extension restores saved view state afterward. This is not native page caching.
 
-- ARIA tabs with a tablist, selected state, and a controlled tabpanel. Glance
-  groups use this pattern and remain supported.
-- Native HTML `details` sections, including their open or closed state.
-- ARIA accordion/disclosure buttons that control a labelled `region`.
-- Page and nested element scrolling, including horizontal right-to-left scrolling.
+- Glance's selected dashboard groups.
+- Glance's expanded or collapsed "Show more" lists and card grids, including
+  sections inside inactive groups. The native button updates its own state and
+  label, so "Show less" still works after restoration.
+- Page and nested element scroll positions, applied after groups and sections.
 
-Unique element IDs keep controls identifiable when content moves. Controls
-without IDs use their position and element type, so changed layouts can affect
-restoration. Late controls are retried for up to five seconds; each control is
-activated at most once per DOM element, and user input stops restoration.
-Menus, dialogs, form entries, custom JavaScript state, and controls requiring
-trusted input are not restored. Closed shadow roots and controls without the
-supported markup are not covered. Anchor tabs that ignore canceled clicks may
-not restore; native anchor navigation is suppressed to avoid extra history entries.
+Controls are located by their position in the document, as in 1.0.3. Changed
+layouts or feed structure can affect restoration. Late controls are retried for
+up to five seconds; user input stops restoration. An expansion toggle is clicked
+at most once per DOM element and only when its current state differs from the
+saved state. The generic ARIA tab, details and accordion handling from 1.0.4 has
+been removed. Other sites still support the original new-tab/link behavior, but
+their custom controls and application state are not restored.
 
 Temporary view state stays in memory while the extension is running and is
 cleared when you close the tab, change the site, or revoke access. New tabs start
@@ -94,15 +92,15 @@ pnpm test
 To package the committed extension source with Git:
 
 ```sh
-git -c core.autocrlf=false archive --format=zip --output=tab-and-type-1.0.4.zip HEAD:extension
+git -c core.autocrlf=false archive --format=zip --output=tab-and-type-1.0.5.zip HEAD:extension
 ```
 
 The resulting ZIP has `manifest.json` at its root. It is still unsigned.
 
-The 46 automated tests use mocked Firefox APIs and jsdom HTML fixtures. Link navigation
+The 38 automated tests use mocked Firefox APIs and jsdom HTML fixtures. Link navigation
 was also tested in a separate Firefox 159 profile with a Glance dashboard.
 The Back/Forward restoration changes have automated regression coverage,
-including multiple control patterns and changed markup. Scrolling and timing are
+including Glance groups, Show more/less, delayed widgets and unsafe controls. Scrolling and timing are
 simulated; these changes have not yet been verified in a live Firefox session.
 See [architecture and validation notes](docs/architecture.txt) for details.
 

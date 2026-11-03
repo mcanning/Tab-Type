@@ -96,7 +96,7 @@ async function bridge({ mode = "iframe", authorized = true, baseTarget = null, b
     messages.push(copy(message));
     return message.type === "bridge-ready" ? { ok: authorized, token: "test-token" } : sendResult;
   } } };
-  const view = { page: "https://www.mlb.com/", x: 0, y: 700, controls: [], scroll: [] };
+  const view = { page: "https://www.mlb.com/", x: 0, y: 700, groups: [], scroll: [] };
   const timers = new Map();
   let nextTimer = 0;
   const context = vm.createContext({ window, document, location: { href: "https://www.mlb.com/" }, browser, URL,
@@ -346,8 +346,8 @@ test("Back restores only that tab's saved dashboard view and renews bridge autho
   const original = await bg.connect();
   const { token } = await bg.send({ type: "bridge-ready" }, bg.pageSender());
   const view = { page: "https://www.mlb.com/", x: 0, y: 900,
-    controls: [{ kind: "details", target: { path: [1, 2], tag: "details" }, value: true }],
-    scroll: [{ target: { path: [1, 4], tag: "div" }, x: 120, y: 70 }] };
+    groups: [{ path: [1, 2], selected: 2 }], expansions: [{ path: [1, 2, 1], expanded: true }],
+    scroll: [{ path: [1, 4], x: 120, y: 70 }] };
   assert.equal((await bg.send({ type: "open-link", token, href: "https://example.com/", view }, bg.pageSender())).ok, true);
   original.port.onDisconnect.emit();
   const restored = await bg.connect(7, undefined, true);
@@ -367,8 +367,9 @@ test("view snapshots require the authenticated frame/token and contain only boun
   await bg.connect();
   const { token } = await bg.send({ type: "bridge-ready" }, bg.pageSender());
   const view = { page: "https://www.mlb.com/", y: 700, password: "do not retain", html: "do not retain",
-    controls: [{ kind: "details", target: { path: [1], tag: "details" }, value: true },
-      { kind: "details", target: { path: [-1], tag: "details" }, value: false }], scroll: [] };
+    groups: [{ path: [1], selected: 2 }, { path: [-1], selected: 4 }], scroll: [],
+    expansions: [{ path: [1, 2], expanded: true, text: "do not retain" }, { path: [-1], expanded: true },
+      { path: [1], expanded: "true" }] };
   for (const [badToken, sender] of [["wrong", bg.pageSender()], [token, bg.pageSender({ frameId: 3 })],
     [token, bg.pageSender({ url: "https://evil.example/" })]]) {
     assert.equal((await bg.send({ type: "save-view", token: badToken, view }, sender)).ok, false);
@@ -377,8 +378,8 @@ test("view snapshots require the authenticated frame/token and contain only boun
   assert.equal((await bg.send({ type: "save-view", token, view }, bg.pageSender())).ok, true);
   await bg.connect(7, undefined, true);
   const restored = await bg.send({ type: "bridge-ready" }, bg.pageSender());
-  assert.deepEqual(copy(restored.view), { page: view.page, x: 0, y: 700,
-    controls: [{ kind: "details", target: { path: [1], tag: "details" }, value: true }], scroll: [] });
+  assert.deepEqual(copy(restored.view), { page: view.page, x: 0, y: 700, groups: [{ path: [1], selected: 2 }],
+    expansions: [{ path: [1, 2], expanded: true }], scroll: [] });
 });
 
 test("fresh new tabs, closing a tab, changing the site and revoking access discard saved views", async () => {
@@ -410,18 +411,4 @@ test("a cached frame can follow links again after Back", async () => {
   await flush();
   assert.equal(br.click().prevented, true);
   assert.equal(br.messages.filter(message => message.type === "open-link").length, 2);
-});
-
-test("keyboard tab changes and native section toggles queue one authenticated view snapshot", async () => {
-  const br = await bridge();
-  for (const fn of [...br.timers.values()]) fn();
-  br.timers.clear();
-  br.messages.length = 0;
-  br.listeners.keyup({ key: "ArrowRight" });
-  br.listeners.toggle({ newState: "open" });
-  assert.equal(br.timers.size, 1);
-  for (const fn of [...br.timers.values()]) fn();
-  assert.equal(br.messages.length, 1);
-  assert.equal(br.messages[0].type, "save-view");
-  assert.equal(br.messages[0].token, "test-token");
 });
