@@ -6,19 +6,36 @@
 
 **Your page, ready to search.**
 
-Tab & Type is a Firefox extension that shows your chosen website on new tabs,
-leaves the new-tab address bar empty, and opens ordinary links in the full tab.
-Your existing Firefox search engine handles anything you type in the address bar.
+**Tried a new-tab add-on that opens your favorite page, but makes you click the
+address bar before you can search?**
+
+Tab & Type is for you. It shows your chosen website on every new tab while
+keeping Firefox's address bar empty and ready for typing. Open a tab, start
+typing, and search with your existing default search engine.
 
 ## Features
 
-- Choose your own start page; no website is configured by default.
+- Choose your own start page and keep the new-tab address bar ready to search.
 - Open ordinary links in the full tab, including links initially marked to open a new window.
 - Keep normal Ctrl-click, middle-click, download, and in-page anchor behavior.
-- Open Glance dashboard group-heading links in the full tab.
-- Restore Glance groups, expanded "Show more" lists/grids, and page/panel scroll positions when returning with Back.
 - Store settings locally and request access only to the selected site.
 - No accounts, analytics, or developer-operated backend.
+
+## Glance dashboards
+
+Using [Glance](https://github.com/glanceapp/glance), the self-hosted dashboard
+app? Tab & Type also helps you return to your place after following a link:
+
+- Restore your selected dashboard groups and page/panel scroll positions.
+- Remember expanded "Show more" lists and card grids, including sections in
+  inactive groups.
+- Reopen expanded sections before restoring the scroll position. "Show less"
+  still works, and sections you closed stay closed.
+- Open linked group headings in the same browser tab.
+
+Group and expanded-section restoration currently support Glance dashboards.
+Back or Forward can still reload the page before its saved view is restored;
+changed dashboard layouts and feed contents can affect restoration.
 
 ## Install
 

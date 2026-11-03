@@ -24,32 +24,26 @@ Support URL: https://github.com/mcanning/Tab-Type/issues
 
 SUMMARY
 
-Your chosen website on every new tab, with the address bar ready to search.
+Your chosen page on every new tab, with an empty address bar ready to search. Open a tab and start typing.
 
 DESCRIPTION
 
-Open your own start page whenever you create a new tab, while keeping Firefox's
-address bar empty and ready for typing. Use your existing default search engine.
+**Tried a new-tab add-on that opens your favorite page, but makes you click the address bar before you can search?**
 
-Choose a website in settings. Ordinary links open in the full tab, including
-links that initially request a new window. Ctrl-click, middle-click, downloads
-and in-page fragment links retain their usual behavior. Glance dashboard group
-headings are supported too.
+Tab & Type is for you. It shows your chosen website on every new tab while keeping Firefox's address bar empty and ready for typing. Open a tab, start typing, and search with your existing default search engine.
 
-Returning with Back restores Glance dashboard groups, expanded "Show more"
-lists/grids, and scroll positions for that browser tab. Firefox can still reload
-the site before restoration. Custom application state and changed layouts are
-not guaranteed to restore.
+- Choose your own start page.
+- Open ordinary links in the same browser tab.
+- Keep familiar Ctrl-click, middle-click, download and in-page link behavior.
+- Store settings locally and grant access only to your chosen website.
 
-There are no accounts, subscriptions, analytics, or developer-operated servers.
-Your selected address is stored locally. Website access is requested only for
-the site you choose. The extension is open source under the MIT license.
+Using [Glance](https://github.com/glanceapp/glance), the self-hosted dashboard app? Tab & Type also restores your selected dashboard groups and scroll positions when you return with Back or Forward. Expanded "Show more" lists and card grids reopen before the scroll position is restored, including sections inside inactive groups. "Show less" still works, and sections you closed stay closed. Linked group headings open in the same browser tab.
 
-Compatibility: desktop Firefox 140 or newer. Your chosen start page must allow
-embedding. Some sites block embedded pages, and this extension respects those
-protections. Some website-script buttons, logins, cookies and autofocus may
-behave differently inside an embedded page. If your chosen site redirects to
-another hostname, save its final address.
+Group and expanded-section restoration currently support Glance dashboards. Back or Forward may still reload the page before restoring its saved view, and changed layouts or feed contents can affect restoration.
+
+Free and open source under the MIT license. No accounts, subscriptions or analytics.
+
+Requires desktop Firefox 140 or later and a start page that allows embedding. Website autofocus, logins and script-driven buttons can affect compatibility. Firefox's security protections remain in place.
 
 PRIVACY POLICY
 
@@ -61,12 +55,20 @@ MIT License. Complete text is in LICENSE and extension/LICENSE.txt.
 
 RELEASE NOTES
 
-Version 1.0.5 restores the Glance-specific behavior from 1.0.3 and adds support
-for remembering expanded "Show more" lists and card grids when returning with
-Back or Forward. Sections reopen before restoring scroll positions, and "Show
-less" continues to work normally. Sections you closed stay closed. The generic
-control restoration introduced in 1.0.4 has been removed. No new permissions
-are required. The page may still reload before its saved view is restored.
+Changes since 1.0.2: improved dashboard restoration after Back or Forward.
+
+For [Glance](https://github.com/glanceapp/glance) dashboards:
+
+- Restore selected dashboard groups and page/panel scroll positions after Back or Forward.
+- Remember expanded "Show more" lists and card grids, including sections inside inactive groups.
+- Reopen expanded sections before restoring the scroll position.
+- Keep "Show less" working normally and leave closed sections closed.
+
+Version 1.0.5 keeps the focused dashboard restoration from 1.0.3 and removes the generic control restoration introduced in 1.0.4. Group and expanded-section restoration currently support Glance dashboards.
+
+Your empty new-tab address bar, same-tab links and standard new-tab icon remain unchanged. No additional permissions are required.
+
+Back or Forward may still reload the page before restoring its saved view. Changed dashboard layouts or feed contents can affect restoration. This update does not provide native page caching.
 
 REVIEWER NOTES
 
